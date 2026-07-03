@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Agent-friendly remote Python debugger over a zero-dependency TCP API"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "BSD-2-Clause"}
+license = "BSD-2-Clause"
 authors = [
   {name = "apdb contributors"}
 ]
@@ -17,7 +17,6 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: BSD License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.8",
@@ -28,6 +27,7 @@ classifiers = [
   "Topic :: Software Development :: Debuggers",
 ]
 dependencies = []
+license-files = ["LICENSE"]
 
 [project.scripts]
 apdb_cli = "apdb.cli:main"
