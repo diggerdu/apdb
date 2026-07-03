@@ -78,3 +78,9 @@ Supported v0 commands:
 `apdb` has no authentication in v0. Debugger access can inspect and evaluate
 code inside the target process. Bind to `127.0.0.1` unless you explicitly want
 to expose that control surface.
+
+## Agent Skill
+
+This repository includes a bundled agent skill at `skills/apdb/SKILL.md`.
+Install or copy that skill into your coding agent's skill directory when you
+want the agent to remember the `apdb` workflow.

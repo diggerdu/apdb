@@ -1,0 +1,26 @@
+import pathlib
+import re
+import unittest
+
+
+class APDBSkillTests(unittest.TestCase):
+    def test_skill_frontmatter_and_examples_are_valid(self):
+        path = pathlib.Path("skills/apdb/SKILL.md")
+        text = path.read_text(encoding="utf-8")
+
+        self.assertTrue(text.startswith("---\n"))
+        self.assertIn("name: apdb", text)
+        self.assertRegex(text, r"description: Use when .+apdb_cli")
+        self.assertIn("apdb.set_trace(port=8888)", text)
+        self.assertIn("apdb_cli ping --port 8888", text)
+        self.assertNotIn("44" + "44", text)
+
+    def test_skill_description_stays_under_limit(self):
+        text = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")
+        description = re.search(r"^description: (.+)$", text, re.MULTILINE).group(1)
+
+        self.assertLessEqual(len(description), 1024)
+
+
+if __name__ == "__main__":
+    unittest.main()
