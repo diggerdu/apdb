@@ -12,7 +12,7 @@ The runtime and CLI use only the Python standard library.
 import apdb
 
 answer = 41
-apdb.set_trace(port=4444)
+apdb.set_trace(port=8888)
 print(answer + 1)
 ```
 
@@ -23,7 +23,7 @@ The process resumes only after the TCP API receives a release command such as
 By default, `apdb` binds to `127.0.0.1` and uses no authentication:
 
 ```python
-apdb.set_trace(port=4444, host="127.0.0.1")
+apdb.set_trace(port=8888, host="127.0.0.1")
 ```
 
 ## CLI
@@ -31,14 +31,14 @@ apdb.set_trace(port=4444, host="127.0.0.1")
 The package installs `apdb_cli`:
 
 ```bash
-apdb_cli ping --port 4444
-apdb_cli state --port 4444
-apdb_cli where --port 4444
-apdb_cli locals --port 4444
-apdb_cli eval 'answer + 1' --port 4444
-apdb_cli next --port 4444
-apdb_cli step --port 4444
-apdb_cli continue --port 4444
+apdb_cli ping --port 8888
+apdb_cli state --port 8888
+apdb_cli where --port 8888
+apdb_cli locals --port 8888
+apdb_cli eval 'answer + 1' --port 8888
+apdb_cli next --port 8888
+apdb_cli step --port 8888
+apdb_cli continue --port 8888
 ```
 
 The CLI prints one JSON response to stdout and exits nonzero for connection

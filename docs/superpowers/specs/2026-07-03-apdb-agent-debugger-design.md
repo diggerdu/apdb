@@ -17,7 +17,7 @@ User code pauses execution with:
 ```python
 import apdb
 
-apdb.set_trace(port=4444)
+apdb.set_trace(port=8888)
 ```
 
 `set_trace()` starts a no-auth TCP API service and blocks the target process.
@@ -28,7 +28,7 @@ when a client sends a release debugger command, such as `continue`, `next`,
 The v0 API shape is:
 
 ```python
-apdb.set_trace(port=4444, host="127.0.0.1", header=None)
+apdb.set_trace(port=8888, host="127.0.0.1", header=None)
 ```
 
 Defaults and constraints:
@@ -46,14 +46,14 @@ The package installs a console command named `apdb_cli`.
 Examples:
 
 ```bash
-apdb_cli ping --port 4444
-apdb_cli state --port 4444
-apdb_cli where --port 4444
-apdb_cli locals --port 4444
-apdb_cli eval --port 4444 'some_expr'
-apdb_cli next --port 4444
-apdb_cli step --port 4444
-apdb_cli continue --port 4444
+apdb_cli ping --port 8888
+apdb_cli state --port 8888
+apdb_cli where --port 8888
+apdb_cli locals --port 8888
+apdb_cli eval --port 8888 'some_expr'
+apdb_cli next --port 8888
+apdb_cli step --port 8888
+apdb_cli continue --port 8888
 ```
 
 The CLI is a thin wrapper around the TCP API. It is not an interactive shell in
