@@ -1,8 +1,11 @@
 import contextlib
 import io
 import json
+import os
+import pathlib
 import socket
 import socketserver
+import tempfile
 import threading
 import unittest
 
@@ -75,6 +78,58 @@ class CLITests(unittest.TestCase):
             OneShotHandler.seen_request,
             {"id": 1, "cmd": "eval", "expr": "x + 1"},
         )
+
+    def test_skills_install_prints_json_response(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = pathlib.Path(tempdir)
+            home = root / "home"
+            codex_home = root / "codex"
+            home.mkdir()
+            codex_home.mkdir()
+            old_home = os.environ.get("HOME")
+            old_codex_home = os.environ.get("CODEX_HOME")
+            os.environ["HOME"] = str(home)
+            os.environ["CODEX_HOME"] = str(codex_home)
+            self.addCleanup(self.restore_env, "HOME", old_home)
+            self.addCleanup(self.restore_env, "CODEX_HOME", old_codex_home)
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = cli.main(
+                    ["skills", "install", "--agent", "codex", "--scope", "user"]
+                )
+
+            response = json.loads(stdout.getvalue())
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(response["status"], "installed")
+            self.assertEqual(response["installed"][0]["agent"], "codex")
+            self.assertTrue((codex_home / "skills" / "apdb" / "SKILL.md").exists())
+
+    def test_skills_install_existing_destination_returns_nonzero(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = pathlib.Path(tempdir)
+            codex_home = root / "codex"
+            destination = codex_home / "skills" / "apdb"
+            destination.mkdir(parents=True)
+            old_codex_home = os.environ.get("CODEX_HOME")
+            os.environ["CODEX_HOME"] = str(codex_home)
+            self.addCleanup(self.restore_env, "CODEX_HOME", old_codex_home)
+            stdout = io.StringIO()
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = cli.main(
+                    ["skills", "install", "--agent", "codex", "--scope", "user"]
+                )
+
+            response = json.loads(stdout.getvalue())
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(response["error"]["code"], "destination_exists")
+
+    def restore_env(self, key, old_value):
+        if old_value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = old_value
 
 
 if __name__ == "__main__":

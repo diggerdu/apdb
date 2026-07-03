@@ -82,5 +82,29 @@ to expose that control surface.
 ## Agent Skill
 
 This repository includes a bundled agent skill at `skills/apdb/SKILL.md`.
-Install or copy that skill into your coding agent's skill directory when you
-want the agent to remember the `apdb` workflow.
+Install that skill through `apdb_cli` when you want a coding agent to remember
+the `apdb` workflow.
+
+Codex:
+
+```bash
+apdb_cli skills install --agent codex --scope user
+apdb_cli skills install --agent codex --scope project
+```
+
+Claude Code:
+
+```bash
+apdb_cli skills install --agent claude-code --scope user
+apdb_cli skills install --agent claude-code --scope project
+```
+
+Both:
+
+```bash
+apdb_cli skills install --agent all --scope user
+apdb_cli skills install --agent all --scope project
+```
+
+Use `--force` to overwrite an existing installed skill. `--scope global` is an
+alias for `--scope user`.

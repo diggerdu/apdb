@@ -21,6 +21,14 @@ class APDBSkillTests(unittest.TestCase):
 
         self.assertLessEqual(len(description), 1024)
 
+    def test_packaged_skill_copy_matches_repo_skill(self):
+        repo_skill = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")
+        packaged_skill = pathlib.Path("apdb/bundled_skill/apdb/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertEqual(packaged_skill, repo_skill)
+
 
 if __name__ == "__main__":
     unittest.main()

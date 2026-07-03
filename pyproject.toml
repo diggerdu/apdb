@@ -33,4 +33,7 @@ license-files = ["LICENSE"]
 apdb_cli = "apdb.cli:main"
 
 [tool.setuptools]
-packages = ["apdb"]
+packages = ["apdb", "apdb.bundled_skill", "apdb.bundled_skill.apdb"]
+
+[tool.setuptools.package-data]
+apdb = ["bundled_skill/apdb/SKILL.md"]
