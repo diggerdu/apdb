@@ -1,5 +1,6 @@
 import argparse
 import json
+import pathlib
 import socket
 import sys
 
@@ -16,6 +17,7 @@ def build_parser():
     shared.add_argument("--host", default=DEFAULT_HOST)
     shared.add_argument("--port", type=int, required=True)
     shared.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
+    shared.add_argument("--output")
 
     parser = argparse.ArgumentParser(prog="apdb_cli")
     subparsers = parser.add_subparsers(dest="cmd", required=True)
@@ -24,6 +26,9 @@ def build_parser():
 
     eval_parser = subparsers.add_parser("eval", parents=[shared])
     eval_parser.add_argument("expr")
+
+    exec_file_parser = subparsers.add_parser("exec-file", parents=[shared])
+    exec_file_parser.add_argument("path")
 
     skills_parser = subparsers.add_parser("skills")
     skills_subparsers = skills_parser.add_subparsers(dest="skills_cmd", required=True)
@@ -38,6 +43,9 @@ def make_request(args):
     request = {"id": 1, "cmd": args.cmd}
     if args.cmd == "eval":
         request["expr"] = args.expr
+    if args.cmd == "exec-file":
+        request["cmd"] = "exec"
+        request["code"] = pathlib.Path(args.path).read_text(encoding="utf-8")
     return request
 
 
@@ -60,8 +68,16 @@ def main(argv=None):
         print(f"connection failed: {exc}", file=sys.stderr)
         return 2
 
-    print(json.dumps(response, sort_keys=True))
+    write_response(response, args.output)
     return 0 if response.get("ok") else 1
+
+
+def write_response(response, output=None):
+    payload = json.dumps(response, sort_keys=True)
+    if output:
+        pathlib.Path(output).write_text(payload + "\n", encoding="utf-8")
+    else:
+        print(payload)
 
 
 def main_skills(args):

@@ -108,6 +108,43 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(process.stdout.readline().strip(), "after 42")
         self.assertEqual(process.wait(timeout=2), 0)
 
+    def test_exec_command_runs_code_in_current_frame(self):
+        port = unused_port()
+        source = textwrap.dedent(
+            f"""
+            import apdb
+
+            def main():
+                answer = 41
+                print("before", flush=True)
+                apdb.set_trace(port={port})
+                print("after", answer, flush=True)
+
+            main()
+            """
+        )
+        process = self.start_debuggee(source)
+
+        self.assertEqual(process.stdout.readline().strip(), "before")
+        wait_for_ping(port)
+        exec_response = send_command(
+            "127.0.0.1",
+            port,
+            {"id": 19, "cmd": "exec", "code": "answer = answer + 1"},
+            timeout=1.0,
+        )
+
+        self.assertTrue(exec_response["ok"])
+        self.assertEqual(exec_response["result"], {"status": "executed"})
+        locals_response = send_command(
+            "127.0.0.1", port, {"id": 20, "cmd": "locals"}, timeout=1.0
+        )
+        self.assertEqual(locals_response["result"]["answer"], "42")
+
+        send_command("127.0.0.1", port, {"id": 21, "cmd": "continue"}, timeout=1.0)
+        self.assertEqual(process.stdout.readline().strip(), "after 42")
+        self.assertEqual(process.wait(timeout=2), 0)
+
     def test_unknown_command_returns_structured_error(self):
         port = unused_port()
         source = textwrap.dedent(

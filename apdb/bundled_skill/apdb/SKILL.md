@@ -30,6 +30,9 @@ apdb_cli state --port 8888
 apdb_cli where --port 8888
 apdb_cli locals --port 8888
 apdb_cli eval 'some_expression' --port 8888
+apdb_cli eval 'some_expression' --port 8888 --output result.json
+apdb_cli exec-file snippet.py --port 8888
+apdb_cli exec-file snippet.py --port 8888 --output result.json
 apdb_cli next --port 8888
 apdb_cli step --port 8888
 apdb_cli continue --port 8888
@@ -41,9 +44,12 @@ apdb_cli continue --port 8888
 2. Run the target program until it blocks.
 3. Check liveness with `apdb_cli ping --port 8888`.
 4. Read `state`, `where`, and `locals` before evaluating expressions.
-5. Use `eval` for expressions only. Use `exec-file` for multi-statement snippets
-   when the installed `apdb` version supports it.
-6. Release the process with `continue`, `next`, `step`, or `quit`.
+5. Use `eval` for expressions only.
+6. Use `exec-file` for multi-statement snippets such as assignments, imports,
+   loops, or helper definitions.
+7. Use `--output result.json` when JSON output may contain multiline strings,
+   Unicode, quotes, shell-sensitive text, or large values.
+8. Release the process with `continue`, `next`, `step`, or `quit`.
 
 ## Command Notes
 
@@ -52,14 +58,14 @@ apdb_cli continue --port 8888
   explicitly accepts that risk.
 - CLI responses are JSON. Parse them instead of scraping terminal formatting.
 - Prefer a fixed port supplied by the user or repo docs. Use `8888` for examples.
-- If response text may contain multiline strings, Unicode, or shell-sensitive
-  characters, prefer CLI output-to-file support when available.
+- `--output PATH` writes the complete JSON response as UTF-8 and prints nothing
+  to stdout.
 
 ## Common Mistakes
 
 - Do not assume an interactive pdb prompt exists.
 - Do not use `eval` for statements such as assignments, imports, loops, or
-  function definitions.
+  function definitions. Put those statements in a file and run `exec-file`.
 - Do not forget to send `continue` or another release command; the target
   process stays blocked until released.
 - Do not paste API tokens, secrets, or credentials into `eval` or command logs.

@@ -13,7 +13,15 @@ class APDBSkillTests(unittest.TestCase):
         self.assertRegex(text, r"description: Use when .+apdb_cli")
         self.assertIn("apdb.set_trace(port=8888)", text)
         self.assertIn("apdb_cli ping --port 8888", text)
+        self.assertIn("apdb_cli exec-file snippet.py --port 8888", text)
+        self.assertIn("--output result.json", text)
         self.assertNotIn("44" + "44", text)
+
+    def test_skill_only_documents_shipped_commands(self):
+        text = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("Install This Skill", text)
+        self.assertNotIn("skills install", text)
 
     def test_skill_description_stays_under_limit(self):
         text = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")

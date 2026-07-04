@@ -36,6 +36,9 @@ apdb_cli state --port 8888
 apdb_cli where --port 8888
 apdb_cli locals --port 8888
 apdb_cli eval 'answer + 1' --port 8888
+apdb_cli eval 'answer + 1' --port 8888 --output result.json
+apdb_cli exec-file snippet.py --port 8888
+apdb_cli exec-file snippet.py --port 8888 --output result.json
 apdb_cli next --port 8888
 apdb_cli step --port 8888
 apdb_cli continue --port 8888
@@ -68,6 +71,7 @@ Supported v0 commands:
 - `where`
 - `locals`
 - `eval`
+- `exec`
 - `next`
 - `step`
 - `continue`

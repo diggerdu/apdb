@@ -1,4 +1,5 @@
 import bdb
+import ctypes
 import linecache
 import sys
 import threading
@@ -29,6 +30,7 @@ class AgentPdbSession:
         self._paused = False
         self._trace_mode = None
         self._next_frame = None
+        self._skip_line = None
 
     def start(self):
         try:
@@ -77,6 +79,8 @@ class AgentPdbSession:
                 return ok_response(request, self._locals())
             if cmd == "eval":
                 return ok_response(request, self._eval(request.get("expr", "")))
+            if cmd == "exec":
+                return ok_response(request, self._exec(request.get("code", "")))
             if cmd in RELEASE_COMMANDS:
                 return self._release(request, cmd)
             return error_response(request, "unknown_command", f"unknown command: {cmd}")
@@ -131,6 +135,14 @@ class AgentPdbSession:
         value = eval(expr, frame.f_globals, frame.f_locals)
         return {"repr": safe_repr(value), "type": type(value).__name__}
 
+    def _exec(self, code):
+        if not code:
+            raise ValueError("exec command requires code")
+        frame = self._require_frame()
+        exec(code, frame.f_globals, frame.f_locals)
+        sync_frame_locals(frame)
+        return {"status": "executed"}
+
     def _require_frame(self):
         if self._current_frame is None:
             raise RuntimeError("debugger is not paused at a frame")
@@ -150,6 +162,9 @@ class AgentPdbSession:
     def _should_pause_for_trace(self, frame, event):
         if event != "line":
             return False
+        if self._skip_line == (frame, frame.f_lineno):
+            self._skip_line = None
+            return False
         if self._trace_mode == "step":
             return True
         if self._trace_mode == "next":
@@ -168,6 +183,7 @@ class AgentPdbSession:
         if action in {"next", "step"}:
             self._trace_mode = action
             self._next_frame = frame
+            self._skip_line = (frame, frame.f_lineno)
             frame.f_trace = self.trace_dispatch
             sys.settrace(self.trace_dispatch)
             return self.trace_dispatch
@@ -181,6 +197,13 @@ def safe_repr(value):
         return repr(value)
     except Exception:
         return f"<unrepresentable {type(value).__name__}>"
+
+
+def sync_frame_locals(frame):
+    try:
+        ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame), ctypes.c_int(1))
+    except AttributeError:
+        pass
 
 
 def set_trace(host="127.0.0.1", port=None, header=None):

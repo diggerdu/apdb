@@ -79,6 +79,52 @@ class CLITests(unittest.TestCase):
             {"id": 1, "cmd": "eval", "expr": "x + 1"},
         )
 
+    def test_eval_output_writes_response_to_file(self):
+        server, thread = self.run_server()
+        host, port = server.server_address
+        stdout = io.StringIO()
+        with tempfile.TemporaryDirectory() as tempdir:
+            output_path = pathlib.Path(tempdir) / "result.json"
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = cli.main(
+                    [
+                        "eval",
+                        "x + 1",
+                        "--host",
+                        host,
+                        "--port",
+                        str(port),
+                        "--output",
+                        str(output_path),
+                    ]
+                )
+            thread.join(timeout=1.0)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(json.loads(output_path.read_text(encoding="utf-8")), OneShotHandler.response)
+
+    def test_exec_file_command_sends_file_contents(self):
+        server, thread = self.run_server()
+        host, port = server.server_address
+        stdout = io.StringIO()
+        with tempfile.TemporaryDirectory() as tempdir:
+            snippet = pathlib.Path(tempdir) / "snippet.py"
+            snippet.write_text("x = 1\nprint('hello')\n", encoding="utf-8")
+
+            with contextlib.redirect_stdout(stdout):
+                exit_code = cli.main(
+                    ["exec-file", str(snippet), "--host", host, "--port", str(port)]
+                )
+            thread.join(timeout=1.0)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            OneShotHandler.seen_request,
+            {"id": 1, "cmd": "exec", "code": "x = 1\nprint('hello')\n"},
+        )
+
     def test_skills_install_prints_json_response(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = pathlib.Path(tempdir)
