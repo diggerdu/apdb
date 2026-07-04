@@ -11,6 +11,19 @@ description: Use when debugging Python code with apdb, agent-friendly pdb, remot
 program's call site close to `pdb`, but exposes debugger control through
 newline-delimited JSON over TCP and the `apdb_cli` command.
 
+## Environment Setup
+
+`apdb` must be installed in the target Python environment that runs the program
+being debugged. If `import apdb` or `apdb_cli` is unavailable in that
+environment, install it there first:
+
+```bash
+python -m pip install -U apdb
+```
+
+Use the target environment's Python executable, such as `.venv/bin/python`,
+`conda run -n ENV python`, or the interpreter used by the app.
+
 ## Quick Start
 
 Add a breakpoint in the target process:

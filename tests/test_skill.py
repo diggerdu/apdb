@@ -15,7 +15,14 @@ class APDBSkillTests(unittest.TestCase):
         self.assertIn("apdb_cli ping --port 8888", text)
         self.assertIn("apdb_cli exec-file snippet.py --port 8888", text)
         self.assertIn("--output result.json", text)
+        self.assertIn("python -m pip install -U apdb", text)
         self.assertNotIn("44" + "44", text)
+
+    def test_skill_mentions_target_python_environment_install(self):
+        text = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("target Python environment", text)
+        self.assertIn("python -m pip install -U apdb", text)
 
     def test_skill_only_documents_shipped_commands(self):
         text = pathlib.Path("skills/apdb/SKILL.md").read_text(encoding="utf-8")
