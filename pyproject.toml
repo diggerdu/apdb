@@ -32,6 +32,11 @@ license-files = ["LICENSE"]
 [project.scripts]
 apdb_cli = "apdb.cli:main"
 
+[project.urls]
+Homepage = "https://github.com/diggerdu/apdb"
+Repository = "https://github.com/diggerdu/apdb"
+Issues = "https://github.com/diggerdu/apdb/issues"
+
 [tool.setuptools]
 packages = ["apdb", "apdb.bundled_skill", "apdb.bundled_skill.apdb"]
 
