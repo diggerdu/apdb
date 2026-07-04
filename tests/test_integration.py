@@ -145,6 +145,63 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(process.stdout.readline().strip(), "after 42")
         self.assertEqual(process.wait(timeout=2), 0)
 
+    def test_history_reports_commands_from_current_session(self):
+        port = unused_port()
+        source = textwrap.dedent(
+            f"""
+            import apdb
+
+            def main():
+                answer = 41
+                print("before", flush=True)
+                apdb.set_trace(port={port})
+                print("after", flush=True)
+
+            main()
+            """
+        )
+        process = self.start_debuggee(source)
+
+        self.assertEqual(process.stdout.readline().strip(), "before")
+        wait_for_ping(port)
+        send_command("127.0.0.1", port, {"id": 2, "cmd": "state"}, timeout=1.0)
+        send_command(
+            "127.0.0.1",
+            port,
+            {"id": 3, "cmd": "eval", "expr": "answer + 1"},
+            timeout=1.0,
+        )
+        send_command("127.0.0.1", port, {"id": 4, "cmd": "bad"}, timeout=1.0)
+
+        history_response = send_command(
+            "127.0.0.1", port, {"id": 5, "cmd": "history"}, timeout=1.0
+        )
+
+        self.assertTrue(history_response["ok"])
+        entries = history_response["result"]["entries"]
+        self.assertEqual([entry["seq"] for entry in entries], [1, 2, 3, 4])
+        self.assertEqual([entry["id"] for entry in entries], [1, 2, 3, 4])
+        self.assertEqual(
+            [entry["cmd"] for entry in entries],
+            ["ping", "state", "eval", "bad"],
+        )
+        self.assertEqual([entry["ok"] for entry in entries], [True, True, True, False])
+        self.assertEqual(entries[2]["expr"], "answer + 1")
+        self.assertEqual(entries[3]["error"], "unknown_command")
+
+        second_history_response = send_command(
+            "127.0.0.1", port, {"id": 6, "cmd": "history"}, timeout=1.0
+        )
+        self.assertEqual(
+            second_history_response["result"]["entries"][-1]["cmd"],
+            "history",
+        )
+        self.assertEqual(second_history_response["result"]["entries"][-1]["id"], 5)
+
+        send_command("127.0.0.1", port, {"id": 7, "cmd": "continue"}, timeout=1.0)
+        self.assertEqual(process.stdout.readline().strip(), "after")
+        self.assertEqual(process.wait(timeout=2), 0)
+
     def test_unknown_command_returns_structured_error(self):
         port = unused_port()
         source = textwrap.dedent(

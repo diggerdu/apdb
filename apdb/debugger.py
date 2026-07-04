@@ -9,6 +9,7 @@ from .server import APDBTCPServer
 
 
 RELEASE_COMMANDS = {"continue", "next", "step", "quit"}
+HISTORY_TEXT_LIMIT = 200
 
 
 class APDBError(RuntimeError):
@@ -31,6 +32,9 @@ class AgentPdbSession:
         self._trace_mode = None
         self._next_frame = None
         self._skip_line = None
+        self._history = []
+        self._history_seq = 0
+        self._history_lock = threading.Lock()
 
     def start(self):
         try:
@@ -69,23 +73,30 @@ class AgentPdbSession:
     def handle_request(self, request):
         cmd = request["cmd"]
         try:
-            if cmd == "ping":
-                return ok_response(request, {"status": "online"})
-            if cmd == "state":
-                return ok_response(request, self._state())
-            if cmd == "where":
-                return ok_response(request, {"frames": self._stack()})
-            if cmd == "locals":
-                return ok_response(request, self._locals())
-            if cmd == "eval":
-                return ok_response(request, self._eval(request.get("expr", "")))
-            if cmd == "exec":
-                return ok_response(request, self._exec(request.get("code", "")))
-            if cmd in RELEASE_COMMANDS:
-                return self._release(request, cmd)
-            return error_response(request, "unknown_command", f"unknown command: {cmd}")
+            response = self._handle_request(request, cmd)
         except Exception as exc:
-            return error_response(request, "command_error", f"{type(exc).__name__}: {exc}")
+            response = error_response(request, "command_error", f"{type(exc).__name__}: {exc}")
+        self._record_history(request, response)
+        return response
+
+    def _handle_request(self, request, cmd):
+        if cmd == "ping":
+            return ok_response(request, {"status": "online"})
+        if cmd == "state":
+            return ok_response(request, self._state())
+        if cmd == "where":
+            return ok_response(request, {"frames": self._stack()})
+        if cmd == "locals":
+            return ok_response(request, self._locals())
+        if cmd == "history":
+            return ok_response(request, {"entries": self._history_snapshot()})
+        if cmd == "eval":
+            return ok_response(request, self._eval(request.get("expr", "")))
+        if cmd == "exec":
+            return ok_response(request, self._exec(request.get("code", "")))
+        if cmd in RELEASE_COMMANDS:
+            return self._release(request, cmd)
+        return error_response(request, "unknown_command", f"unknown command: {cmd}")
 
     def trace_dispatch(self, frame, event, arg):
         if self._done:
@@ -106,6 +117,29 @@ class AgentPdbSession:
             "quit": "quitting",
         }[action]
         return ok_response(request, {"status": status})
+
+    def _history_snapshot(self):
+        with self._history_lock:
+            return [dict(entry) for entry in self._history]
+
+    def _record_history(self, request, response):
+        entry = {
+            "seq": None,
+            "id": request.get("id"),
+            "cmd": request.get("cmd"),
+            "ok": bool(response.get("ok")),
+        }
+        if request.get("cmd") == "eval":
+            entry["expr"] = summarize_text(request.get("expr", ""))
+        if request.get("cmd") == "exec":
+            entry["code"] = summarize_text(request.get("code", ""))
+        if not entry["ok"]:
+            entry["error"] = response.get("error", {}).get("code")
+
+        with self._history_lock:
+            self._history_seq += 1
+            entry["seq"] = self._history_seq
+            self._history.append(entry)
 
     def _state(self):
         frame = self._current_frame
@@ -197,6 +231,14 @@ def safe_repr(value):
         return repr(value)
     except Exception:
         return f"<unrepresentable {type(value).__name__}>"
+
+
+def summarize_text(value, limit=HISTORY_TEXT_LIMIT):
+    if not isinstance(value, str):
+        value = str(value)
+    if len(value) <= limit:
+        return value
+    return value[:limit] + "...<truncated>"
 
 
 def sync_frame_locals(frame):

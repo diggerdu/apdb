@@ -42,6 +42,7 @@ apdb_cli ping --port 8888
 apdb_cli state --port 8888
 apdb_cli where --port 8888
 apdb_cli locals --port 8888
+apdb_cli history --port 8888
 apdb_cli eval 'some_expression' --port 8888
 apdb_cli eval 'some_expression' --port 8888 --output result.json
 apdb_cli exec-file snippet.py --port 8888
@@ -57,12 +58,13 @@ apdb_cli continue --port 8888
 2. Run the target program until it blocks.
 3. Check liveness with `apdb_cli ping --port 8888`.
 4. Read `state`, `where`, and `locals` before evaluating expressions.
-5. Use `eval` for expressions only.
-6. Use `exec-file` for multi-statement snippets such as assignments, imports,
+5. Use `history` to inspect the current debug session's API operation history.
+6. Use `eval` for expressions only.
+7. Use `exec-file` for multi-statement snippets such as assignments, imports,
    loops, or helper definitions.
-7. Use `--output result.json` when JSON output may contain multiline strings,
+8. Use `--output result.json` when JSON output may contain multiline strings,
    Unicode, quotes, shell-sensitive text, or large values.
-8. Release the process with `continue`, `next`, `step`, or `quit`.
+9. Release the process with `continue`, `next`, `step`, or `quit`.
 
 ## Command Notes
 
@@ -70,6 +72,8 @@ apdb_cli continue --port 8888
 - There is no authentication. Do not bind to public interfaces unless the user
   explicitly accepts that risk.
 - CLI responses are JSON. Parse them instead of scraping terminal formatting.
+- `history` is the current `set_trace()` session's API operation history, not
+  shell history.
 - Prefer a fixed port supplied by the user or repo docs. Use `8888` for examples.
 - `--output PATH` writes the complete JSON response as UTF-8 and prints nothing
   to stdout.

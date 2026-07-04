@@ -13,6 +13,7 @@ class APDBSkillTests(unittest.TestCase):
         self.assertRegex(text, r"description: Use when .+apdb_cli")
         self.assertIn("apdb.set_trace(port=8888)", text)
         self.assertIn("apdb_cli ping --port 8888", text)
+        self.assertIn("apdb_cli history --port 8888", text)
         self.assertIn("apdb_cli exec-file snippet.py --port 8888", text)
         self.assertIn("--output result.json", text)
         self.assertIn("python -m pip install -U apdb", text)

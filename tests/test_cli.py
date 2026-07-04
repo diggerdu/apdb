@@ -79,6 +79,18 @@ class CLITests(unittest.TestCase):
             {"id": 1, "cmd": "eval", "expr": "x + 1"},
         )
 
+    def test_history_command_sends_history_request(self):
+        server, thread = self.run_server()
+        host, port = server.server_address
+        stdout = io.StringIO()
+
+        with contextlib.redirect_stdout(stdout):
+            exit_code = cli.main(["history", "--host", host, "--port", str(port)])
+        thread.join(timeout=1.0)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(OneShotHandler.seen_request, {"id": 1, "cmd": "history"})
+
     def test_eval_output_writes_response_to_file(self):
         server, thread = self.run_server()
         host, port = server.server_address

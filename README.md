@@ -35,6 +35,7 @@ apdb_cli ping --port 8888
 apdb_cli state --port 8888
 apdb_cli where --port 8888
 apdb_cli locals --port 8888
+apdb_cli history --port 8888
 apdb_cli eval 'answer + 1' --port 8888
 apdb_cli eval 'answer + 1' --port 8888 --output result.json
 apdb_cli exec-file snippet.py --port 8888
@@ -70,12 +71,17 @@ Supported v0 commands:
 - `state`
 - `where`
 - `locals`
+- `history`
 - `eval`
 - `exec`
 - `next`
 - `step`
 - `continue`
 - `quit`
+
+`history` returns the current `set_trace()` session's API operation history.
+Entries include sequence number, request id, command, success flag, error code
+for failed commands, and compact `eval`/`exec` input summaries.
 
 ## Security
 

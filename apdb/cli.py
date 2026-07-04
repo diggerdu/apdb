@@ -21,7 +21,17 @@ def build_parser():
 
     parser = argparse.ArgumentParser(prog="apdb_cli")
     subparsers = parser.add_subparsers(dest="cmd", required=True)
-    for name in ("ping", "state", "where", "locals", "next", "step", "continue", "quit"):
+    for name in (
+        "ping",
+        "state",
+        "where",
+        "locals",
+        "history",
+        "next",
+        "step",
+        "continue",
+        "quit",
+    ):
         subparsers.add_parser(name, parents=[shared])
 
     eval_parser = subparsers.add_parser("eval", parents=[shared])
