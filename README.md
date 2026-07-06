@@ -1,10 +1,17 @@
 # apdb
 
 `apdb` is an agent-friendly Python debugger inspired by `remote-pdb`.
-It keeps the Python call site close to `pdb`, but exposes debugger control over
-a newline-delimited JSON TCP API instead of a human interactive shell.
+It keeps the Python call site close to `pdb`, but exposes debugger control
+through a small TCP interface that coding agents can call without using an
+interactive shell.
 
 The runtime and CLI use only the Python standard library.
+
+## Install
+
+```bash
+python -m pip install -U apdb
+```
 
 ## Python API
 
@@ -17,8 +24,8 @@ print(answer + 1)
 ```
 
 `set_trace()` blocks the target process whether or not a client is connected.
-The process resumes only after the TCP API receives a release command such as
-`continue`, `next`, `step`, or `quit`.
+The process resumes only after you send a release command such as `continue`,
+`next`, `step`, or `quit`.
 
 By default, `apdb` binds to `127.0.0.1` and uses no authentication:
 
@@ -48,10 +55,10 @@ apdb_cli continue --port 8888
 The CLI prints one JSON response to stdout and exits nonzero for connection
 failures or API errors.
 
-## TCP API
+## TCP interface
 
-The TCP API speaks newline-delimited JSON. Each request and response is one JSON
-object followed by `\n`.
+The CLI is a wrapper around the TCP interface. Each request and response is one
+JSON object followed by a newline.
 
 Request:
 
@@ -65,7 +72,7 @@ Response:
 {"id": 1, "ok": true, "result": {"status": "paused"}}
 ```
 
-Supported v0 commands:
+Commands:
 
 - `ping`
 - `state`
@@ -79,15 +86,15 @@ Supported v0 commands:
 - `continue`
 - `quit`
 
-`history` returns the current `set_trace()` session's API operation history.
-Entries include sequence number, request id, command, success flag, error code
-for failed commands, and compact `eval`/`exec` input summaries.
+`history` returns commands sent during the current paused debugging session.
+Each entry includes the sequence number, request id, command, success flag,
+error code for failed commands, and compact `eval`/`exec` input summaries.
 
 ## Security
 
-`apdb` has no authentication in v0. Debugger access can inspect and evaluate
-code inside the target process. Bind to `127.0.0.1` unless you explicitly want
-to expose that control surface.
+`apdb` has no authentication. Debugger access can inspect and evaluate code
+inside the target process. Bind to `127.0.0.1` unless you explicitly want to
+expose that control surface.
 
 ## Agent Skill
 

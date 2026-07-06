@@ -6,6 +6,13 @@ import apdb
 
 
 class PackageMetadataTests(unittest.TestCase):
+    def test_readme_uses_user_facing_language(self):
+        readme = pathlib.Path("README.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("v0", readme)
+        self.assertNotIn("internal", readme.lower())
+        self.assertNotIn("convention", readme.lower())
+
     def test_project_urls_point_to_github(self):
         metadata = tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))
 
